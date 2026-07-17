@@ -43,10 +43,18 @@ public class MmdbEditCommand implements QuarkusApplication, Runnable {
     CommandLine.Model.CommandSpec spec;
 
     public static void main(String... args) {
-        // serve 子命令需要 HTTP；其余 CLI 命令不开端口（application.properties 默认 false）
-        for (String arg : args) {
-            if ("serve".equals(arg)) {
+        // serve 子命令需要 HTTP；其余 CLI 命令不开端口（application.properties 默认 false）。
+        // quarkus.http.* 在启动早期读取，必须在 Quarkus.run 前预解析 serve/--port。
+        for (int i = 0; i < args.length; i++) {
+            if ("serve".equals(args[i])) {
                 System.setProperty("quarkus.http.host-enabled", "true");
+                for (int j = i + 1; j < args.length; j++) {
+                    if ("--port".equals(args[j]) && j + 1 < args.length) {
+                        System.setProperty("quarkus.http.port", args[j + 1]);
+                    } else if (args[j].startsWith("--port=")) {
+                        System.setProperty("quarkus.http.port", args[j].substring("--port=".length()));
+                    }
+                }
                 break;
             }
         }
@@ -207,7 +215,7 @@ public class MmdbEditCommand implements QuarkusApplication, Runnable {
 
         @Override
         public Integer call() {
-            System.setProperty("quarkus.http.port", String.valueOf(port));
+            // host/port 已在 main() 预解析设置
             System.out.println("mmdb-edit web UI: http://localhost:" + port);
             Quarkus.waitForExit();
             return 0;
