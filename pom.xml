@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.xenoamess.mmdb_editor</groupId>
+    <artifactId>mmdb-editor-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>mmdb-editor-parent</name>
+    <description>mmdb editor and awdb-to-mmdb converter</description>
+    <url>https://github.com/XenoAmess/mmdb-editor-java</url>
+
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>XenoAmess</id>
+            <name>XenoAmess</name>
+            <url>https://github.com/XenoAmess</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/XenoAmess/mmdb-editor-java</url>
+        <connection>scm:git:https://github.com/XenoAmess/mmdb-editor-java.git</connection>
+        <developerConnection>scm:git:https://github.com/XenoAmess/mmdb-editor-java.git</developerConnection>
+    </scm>
+
+    <modules>
+        <module>mmdb-editor-core</module>
+        <module>mmdb-converter-awdb</module>
+        <module>mmdb-editor-app</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <quarkus.platform.version>3.36.2</quarkus.platform.version>
+        <quinoa.version>2.8.3</quinoa.version>
+        <awdb-java.version>2.0.1-rc2</awdb-java.version>
+        <maxmind-db.version>4.1.0</maxmind-db.version>
+        <junit.version>5.11.4</junit.version>
+        <surefire.version>3.5.2</surefire.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.quarkus.platform</groupId>
+                <artifactId>quarkus-bom</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkiverse.quinoa</groupId>
+                <artifactId>quarkus-quinoa</artifactId>
+                <version>${quinoa.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xenoamess</groupId>
+                <artifactId>awdb-java</artifactId>
+                <version>${awdb-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.maxmind.db</groupId>
+                <artifactId>maxmind-db</artifactId>
+                <version>${maxmind-db.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>io.quarkus.platform</groupId>
+                    <artifactId>quarkus-maven-plugin</artifactId>
+                    <version>${quarkus.platform.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${surefire.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <!-- Quarkus native 构建：mvn package -Dnative -->
+        <profile>
+            <id>native</id>
+            <properties>
+                <quarkus.native.enabled>true</quarkus.native.enabled>
+                <quarkus.package.jar.enabled>true</quarkus.package.jar.enabled>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

@@ -1,0 +1,42 @@
+name: build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [21, 25]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Build
+        run: mvn -B verify
+
+  native:
+    name: native (GraalVM CE 21)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: graalvm-community
+          java-version: 21
+          cache: maven
+      - name: Native build
+        run: mvn -B package -Dnative -DskipTests -pl mmdb-editor-app -am
+      - name: Upload native binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: mmdb-edit-native
+          path: mmdb-editor-app/target/mmdb-edit
+          if-no-files-found: ignore
