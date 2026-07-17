@@ -26,17 +26,22 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: graalvm-community
           java-version: 21
           cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable pnpm
+        run: corepack enable pnpm
       - name: Native build
         run: mvn -B package -Dnative -DskipTests -pl mmdb-editor-app -am
       - name: Upload native binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: mmdb-edit-native
-          path: mmdb-editor-app/target/mmdb-edit
-          if-no-files-found: ignore
+          path: mmdb-editor-app/target/mmdb-editor-app-*-runner
+          if-no-files-found: error
