@@ -43,7 +43,7 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <quarkus.platform.version>3.36.2</quarkus.platform.version>
+        <quarkus.platform.version>3.37.3</quarkus.platform.version>
         <quinoa.version>2.8.3</quinoa.version>
         <awdb-java.version>2.0.1-rc2</awdb-java.version>
         <maxmind-db.version>4.1.0</maxmind-db.version>
