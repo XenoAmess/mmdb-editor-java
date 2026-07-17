@@ -42,17 +42,16 @@ final class Trie {
         return bitLength;
     }
 
+    /** 空标记（写入时序列化为 nodeCount，即"未命中"）；用于在覆盖前缀上打空洞 */
+    static final Object EMPTY = new Object();
+
     /**
-     * 插入一条前缀。前缀路径上的槽若已是记录（重叠）则抛异常。
+     * 插入一条前缀。更深前缀穿过已有记录时自动分裂叶子（原记录覆盖其余空间）。
+     * 精确深度处允许覆盖占位叶子；与真实子树重叠则抛 IllegalStateException。
      */
     void insert(byte[] address, int prefixLength, Object record) {
         Objects.requireNonNull(record, "record");
-        if (address.length != bitLength / 8) {
-            throw new IllegalArgumentException("address 长度与树位长不符: " + address.length);
-        }
-        if (prefixLength < 0 || prefixLength > bitLength) {
-            throw new IllegalArgumentException("prefixLength 越界: " + prefixLength);
-        }
+        checkAddress(address, prefixLength);
         int cur = 0;
         for (int i = 0; i < prefixLength; i++) {
             int bit = (address[i / 8] >> (7 - i % 8)) & 1;
@@ -70,16 +69,54 @@ final class Trie {
             } else if (slot instanceof Integer idx) {
                 cur = idx;
             } else {
-                throw new IllegalStateException("前缀与已有记录重叠，深度 " + i);
+                // 叶子分裂：记录/空标记先铺满两侧，继续下钻
+                int next = nodes.size();
+                Node child = new Node();
+                child.left = slot;
+                child.right = slot;
+                nodes.add(child);
+                if (bit == 0) {
+                    n.left = next;
+                } else {
+                    n.right = next;
+                }
+                cur = next;
             }
         }
         Node n = nodes.get(cur);
-        // 叶子写到深度 prefixLength 的"当前节点"——用占位包装表示记录
-        if (n.left != null || n.right != null) {
+        if (!isOverwritable(n)) {
             throw new IllegalStateException("前缀与已有子树重叠，深度 " + prefixLength);
         }
         n.left = record;
         n.right = record;
+    }
+
+    /** 在指定前缀处打"未命中"空洞（如删除覆盖前缀的一部分） */
+    void insertEmpty(byte[] address, int prefixLength) {
+        insert(address, prefixLength, EMPTY);
+    }
+
+    private void checkAddress(byte[] address, int prefixLength) {
+        if (address.length != bitLength / 8) {
+            throw new IllegalArgumentException("address 长度与树位长不符: " + address.length);
+        }
+        if (prefixLength < 0 || prefixLength > bitLength) {
+            throw new IllegalArgumentException("prefixLength 越界: " + prefixLength);
+        }
+    }
+
+    /**
+     * 节点是否可被覆盖写入：空节点或占位叶子（左右相同且非节点引用）。
+     * 含真实子树（引用不同）或别名占位（左右相同的节点引用）不可覆盖。
+     */
+    private static boolean isOverwritable(Node n) {
+        if (n.left == null && n.right == null) {
+            return true;
+        }
+        if (n.left == null || !n.left.equals(n.right)) {
+            return false;
+        }
+        return !(n.left instanceof Integer);
     }
 
     /**

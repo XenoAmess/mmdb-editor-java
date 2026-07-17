@@ -94,10 +94,18 @@ public final class MmdbWriter {
 
         /**
          * 插入一条前缀记录。record 取值见 {@link DataEncoder} 值模型。
-         * 前缀不得重叠。
+         * 更深前缀穿过已有记录时自动分裂叶子；精确深度处覆盖占位叶子。
          */
         public Builder insert(byte[] address, int prefixLength, Object record) {
             trie.insert(address, prefixLength, record);
+            return this;
+        }
+
+        /**
+         * 在指定前缀处打"未命中"空洞。
+         */
+        public Builder insertEmpty(byte[] address, int prefixLength) {
+            trie.insertEmpty(address, prefixLength);
             return this;
         }
 
@@ -160,14 +168,14 @@ public final class MmdbWriter {
         }
 
         private static void collectRecords(Object slot, DataSectionWriter data, Map<Object, Long> recordOffsets) {
-            if (slot != null && !(slot instanceof Integer) && !recordOffsets.containsKey(slot)) {
+            if (slot != null && !(slot instanceof Integer) && slot != Trie.EMPTY && !recordOffsets.containsKey(slot)) {
                 // writeValue 返回字段真实起点（内容去重时指回首次偏移），避免树指针指向 pointer
                 recordOffsets.put(slot, data.writeValue(slot));
             }
         }
 
         private static long childValue(Object slot, long nodeCount, Map<Object, Long> recordOffsets) {
-            if (slot == null) {
+            if (slot == null || slot == Trie.EMPTY) {
                 return nodeCount;
             }
             if (slot instanceof Integer idx) {

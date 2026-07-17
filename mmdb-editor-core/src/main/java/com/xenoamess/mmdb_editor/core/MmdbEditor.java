@@ -76,19 +76,58 @@ public final class MmdbEditor {
         return builder;
     }
 
-    /** 便捷：单条插入/覆盖 */
+    /** 便捷：单条插入/覆盖。精确前缀存在则替换；不存在则在覆盖前缀内分裂插入 */
     public static void upsert(Path src, Path dst, byte[] address, int prefixLength, Object record) throws IOException {
-        transform(src, dst, (addr, len, old) -> {
+        MmdbReader reader = MmdbReader.open(src);
+        MmdbWriter.Builder builder = toBuilder(reader.metadata());
+        boolean[] replaced = {false};
+        reader.walk((addr, len, old) -> {
             if (len == prefixLength && java.util.Arrays.equals(addr, address)) {
-                return record;
+                replaced[0] = true;
+                builder.insert(addr, len, record);
+            } else {
+                builder.insert(addr, len, old);
             }
-            return old;
         });
+        if (!replaced[0]) {
+            builder.insert(address, prefixLength, record);
+        }
+        if (reader.ipVersion() == 6) {
+            builder.aliasIpv4InV6();
+        }
+        builder.write(dst);
     }
 
-    /** 便捷：删除指定前缀 */
+    /** 便捷：删除指定前缀。被删空间向上合并到覆盖记录；无覆盖则打"未命中"空洞 */
     public static void delete(Path src, Path dst, byte[] address, int prefixLength) throws IOException {
-        transform(src, dst, (addr, len, old) ->
-                len == prefixLength && java.util.Arrays.equals(addr, address) ? null : old);
+        MmdbReader reader = MmdbReader.open(src);
+        MmdbWriter.Builder builder = toBuilder(reader.metadata());
+        boolean[] removed = {false};
+        reader.walk((addr, len, old) -> {
+            if (len == prefixLength && java.util.Arrays.equals(addr, address)) {
+                removed[0] = true;
+                // 向上合并：取父区域（翻转前缀末位探测）的记录填补被删空间
+                Object cover = null;
+                if (prefixLength > 0) {
+                    byte[] probe = java.util.Arrays.copyOf(addr, addr.length);
+                    probe[(prefixLength - 1) / 8] ^= (byte) (0x80 >> ((prefixLength - 1) % 8));
+                    cover = reader.lookup(probe);
+                }
+                if (cover != null) {
+                    builder.insert(addr, len, cover);
+                } else {
+                    builder.insertEmpty(addr, len);
+                }
+            } else {
+                builder.insert(addr, len, old);
+            }
+        });
+        if (!removed[0]) {
+            builder.insertEmpty(address, prefixLength);
+        }
+        if (reader.ipVersion() == 6) {
+            builder.aliasIpv4InV6();
+        }
+        builder.write(dst);
     }
 }
