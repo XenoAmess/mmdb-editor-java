@@ -105,6 +105,11 @@
         <!-- Quarkus native 构建：mvn package -Dnative -->
         <profile>
             <id>native</id>
+            <activation>
+                <property>
+                    <name>native</name>
+                </property>
+            </activation>
             <properties>
                 <quarkus.native.enabled>true</quarkus.native.enabled>
                 <quarkus.package.jar.enabled>true</quarkus.package.jar.enabled>
