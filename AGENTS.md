@@ -6,10 +6,13 @@
 - groupId `com.xenoamess.mmdb_editor`, Java release 21, Quarkus 3.26.x, GraalVM CE 21 for native.
 
 ## Build & verify
-- Build+test: `mvn verify`. Native: `mvn package -Dnative -DskipTests -pl mmdb-editor-app -am` (needs GraalVM CE 21).
-- Frontend lives in `mmdb-editor-app/src/main/frontend` (Vite + Vue3 + Element Plus, pnpm via Quinoa).
+- Build+test: `mvn verify` (needs node+pnpm on PATH for the Quinoa frontend build; CI uses setup-node + corepack).
+- Native: `mvn package -Dnative -DskipTests -pl mmdb-editor-app -am` (needs GraalVM CE 21; local: `~/.jdks/graalvm-ce-21.0.2`). Binary lands at `mmdb-editor-app/target/mmdb-editor-app-*-runner` (~60MB).
+- Frontend lives in `mmdb-editor-app/src/main/frontend` (Vite + Vue3 + Element Plus, pnpm via Quinoa; vite pinned ~8.1.3 because the local npm proxy lacks some tarballs).
 - Oracle for writer validation: test-scope `com.maxmind.db:maxmind-db` (official reader, test-only).
+- Local Maven mirror (127.0.0.1:8888) returns 401 for some io.quarkus paths — bypass locally with `-s /tmp/settings-central.xml` (no mirrors).
 - CI: `.github/workflows/build.yml` runs `mvn verify` on JDK 21/25 (temurin); a separate master-only `native` job (GraalVM CE 21) must NOT become a required PR check.
+- Release: GitHub Release triggers `.github/workflows/release.yml` — jars → Central (profile `release`, GPG key A2D61ADCBF47735C in secrets, CENTRAL_USERNAME/TOKEN), native binary → release assets.
 - `.github/workflows/auto-merge.yml` approves + auto-merges dependabot PRs (patch/minor always, major only for github-actions). MYTOKEN lives in the **dependabot** secret namespace.
 - Branch protection on master: required checks `build (21)`, `build (25)` + strict + linear history. Merge PRs with `--rebase`/`--squash`, never `--merge`.
 - dependabot.yml must NOT contain a `groups:` block (dependabot-automerge-skill Pitfall 13).
