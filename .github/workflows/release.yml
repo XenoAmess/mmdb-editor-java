@@ -53,6 +53,6 @@ jobs:
       - name: Rename binary
         run: cp mmdb-editor-app/target/mmdb-editor-app-*-runner mmdb-editor-app/target/mmdb-edit-linux-x86_64
       - name: Upload binary to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: mmdb-editor-app/target/mmdb-edit-linux-x86_64
