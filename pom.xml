@@ -44,7 +44,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <quarkus.platform.version>3.38.2</quarkus.platform.version>
-        <quinoa.version>2.8.4</quinoa.version>
+        <quinoa.version>2.9.0</quinoa.version>
         <awdb-java.version>2.0.1-rc2</awdb-java.version>
         <maxmind-db.version>4.1.0</maxmind-db.version>
         <junit.version>6.1.3</junit.version>
