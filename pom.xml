@@ -46,7 +46,7 @@
         <quarkus.platform.version>3.39.4</quarkus.platform.version>
         <quinoa.version>2.9.0</quinoa.version>
         <awdb-java.version>2.0.1-rc2</awdb-java.version>
-        <maxmind-db.version>4.1.0</maxmind-db.version>
+        <maxmind-db.version>4.2.0</maxmind-db.version>
         <junit.version>6.1.3</junit.version>
         <surefire.version>3.6.0</surefire.version>
     </properties>
